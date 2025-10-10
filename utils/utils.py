@@ -35,3 +35,18 @@ def scale_by_max(reco, original):
 def reconstruct_radial(ksp_sampled, coord, shape=(256,256)):
     reco = sigpy.nufft_adjoint(ksp_sampled, coord, oshape=shape)
     return reco
+
+def get_radial_across(coord):
+    '''
+    Get a radial trajectory with even number of spokes and combine each pair of
+    symmetric-with-respect-to-origin spokes to obtain a radial trajectory whose
+    spokes go through the origin.
+    '''
+    if not(len(coord) % 2 == 0):
+        raise ValueError("The number of spokes in the radial trajectory must be even")
+
+    coord_across = []
+    ns2 = int(len(coord)/2) # Half the number of spokes in the trajectory
+    for sp1, sp2 in zip(coord[:ns2], coord[ns2:]):
+        coord_across.append(np.vstack([sp2[::-1], sp1]))
+    return np.array(coord_across)
