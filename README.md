@@ -10,6 +10,8 @@ This repository contains the first project for the course **3D Medical Image Rec
 - **`notebooks/`** — Includes Jupyter notebooks where we explored key concepts and experimented with the libraries used to solve the tasks.  
   The notebooks also contain comments and reflections about our thought process throughout the project development.
 
+- **`utils`** - Contains several functions to automate some processes in the development of the tasks.
+
 - **`files/`** — Stores the main image file used across the project as well as the project instructions.
 
 ## Authors
