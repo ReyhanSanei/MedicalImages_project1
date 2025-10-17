@@ -14,9 +14,12 @@ def translate_spokes_to_img_coord(spokes, im_size=(256,256)):
         new_spokes.append(new_spoke)
     return np.array(new_spokes)
 
-def radial_sampling(ksp, n_spokes, n_samples=256):
+def radial_sampling(ksp, n_spokes, n_samples=256, dcomp=True):
     coord = sigpy.mri.radial([n_spokes,n_samples,2],ksp.shape,golden=False)
-    dcf = ((coord[...,0])**2+(coord[...,1])**2)**0.5
+    if dcomp:
+        dcf = ((coord[...,0])**2+(coord[...,1])**2)**0.5
+    else:
+        dcf = 1
     coord = translate_spokes_to_img_coord(coord, ksp.shape)
     sampled = sigpy.interpolate(ksp,coord)
     return (sampled*dcf), coord # Density-compensated sampled k-space and coordinates
@@ -40,7 +43,7 @@ def get_radial_across(coord):
     '''
     Get a radial trajectory with even number of spokes and combine each pair of
     symmetric-with-respect-to-origin spokes to obtain a radial trajectory whose
-    spokes go through the origin.
+    spokes go through the origin (slices).
     '''
     if not(len(coord) % 2 == 0):
         raise ValueError("The number of spokes in the radial trajectory must be even")
@@ -50,3 +53,21 @@ def get_radial_across(coord):
     for sp1, sp2 in zip(coord[:ns2], coord[ns2:]):
         coord_across.append(np.vstack([sp2[::-1], sp1]))
     return np.array(coord_across)
+
+def slice_sampling(ksp, n_angles, n_samples=256, dcomp=False):
+    '''
+    Sample k-space in a radial trajectory, with spokes going through the origin (slices).
+    Return the sampled k_space and the coordinates of the sampling points.
+
+    Note: This function obtains the sampled k-space in the correct shape to reconstruct
+    with CT methods.
+    '''
+    coord = sigpy.mri.radial([n_angles*2, int(n_samples/2), 2], ksp.shape, golden=False)
+    coord = get_radial_across(coord)
+    if dcomp:
+        dcf = ((coord[...,0])**2+(coord[...,1])**2)**0.5
+    else:
+        dcf = 1
+    coord = translate_spokes_to_img_coord(coord, ksp.shape)
+    sampled = sigpy.interpolate(ksp, coord)
+    return (sampled*dcf), coord
